@@ -774,3 +774,4 @@ sourceGrid <- function(fileDirectory, sourceDefinitions, timemin, timemax, sourc
     return(myResults)
 }
 
+results <- read.csv("data/myResults.csv", sep=",")

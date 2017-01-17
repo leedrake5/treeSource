@@ -177,6 +177,44 @@ output$jackknifetable <- DT::renderDataTable({
 })
 
 
+output$sourcemap <- renderPlot({
+    
+    NM <- get_map(location=c(input$mapregion), zoom=input$zoom, maptype=input$plottype)
+
+    results.chu <- data.frame(results$Long, results$Lat, results[input$sources])
+    colnames(results.chu) <- c("Long", "Lat", "Source")
+    
+    results.int.chu <- with(results.chu, interp(x=Long, y=Lat, z=Source, duplicate="mean", nx=input$resolution, ny=input$resolution))
+    results.int.chu.melt <- reshape2::melt(results.int.chu$z, na.rm=TRUE)
+    colnames(results.int.chu.melt) <- c("x", "y", "z")
+    
+    results.int.chu.melt$x <- results.int.chu$x[results.int.chu.melt$x]
+    results.int.chu.melt$y <- results.int.chu$y[results.int.chu.melt$y]
+    
+    results.int.chu.melt[is.na(results.int.chu.melt)] <- 0
+    
+    ChuskaSigPlot <- ggmap(NM, alpha=0.2) +
+    #stat_contour(data=results.int.chu.melt, aes(x=x, y=y, z=z, fill=z, alpha=z))+
+    #stat_contour(data=results.int.cib.melt, aes(x=x, y=y, z=z, fill=z, alpha=z))+
+    geom_tile(data=results.int.chu.melt, aes(x=x, y=y, z=z, fill=z, alpha=z))+
+    geom_point(aes(Long, Lat, size=Source), colour="black", alpha=0.2, data=results.chu) +
+    geom_text(aes(x=-108.08, y=36.25, label="Chaco Canyon"))+
+    geom_point(aes(x=-108.05, y=36.1), shape=17, size=5) +
+    coord_equal() +
+    scale_fill_gradient(name = "Source Correlation", low="white", high="red", na.value="white", labels = scales::percent, limits = c(0, 1)) +
+    scale_alpha(guide="none") +
+    scale_y_continuous("Latitude", limits = c(35, 38)) +
+    scale_x_continuous("Longitude", limits = c(-110, -106)) +
+    coord_map() +
+    theme_light() +
+    ggtitle(input$sources) +
+    guides(size=FALSE)
+    
+    ChuskaSigPlot
+
+})
+
+
 })
 
 
